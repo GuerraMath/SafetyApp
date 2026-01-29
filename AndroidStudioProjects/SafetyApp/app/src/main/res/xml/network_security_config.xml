@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  This is the network security configuration file for the app.
+  It allows customizing network security settings without changing app code.
+
+  For more information, see the official documentation:
+  https://developer.android.com/training/articles/network-security-config
+
+  The configuration below defines rules for the domain "safety-api-production.up.railway.app".
+  By setting `cleartextTrafficPermitted` to "false", it ensures that all traffic
+  to this domain and its subdomains must be encrypted (HTTPS).
+
+  Note: For apps targeting Android 9 (API level 28) and higher, cleartext traffic
+  is disabled by default for all domains. This configuration explicitly enforces
+  that policy for the specified domain.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">safety-api-production.up.railway.app</domain>
+    </domain-config>
+</network-security-config>
