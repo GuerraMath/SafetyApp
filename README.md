@@ -35,6 +35,10 @@ Open the project in Android Studio.
 Build and run on an emulator or physical device.
 
 👷 Author
-Matheus Guerra MSc in Aviation Safety and Airworthiness (ITA) ten.matheus.guerra@gmail.com
+
+**Matheus Guerra** *MSc in Aviation Safety and Airworthiness (ITA)*
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/guerramath/)
+[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/GuerraMath)
 
 This project is part of a professional portfolio focused on high-stakes software solutions.
