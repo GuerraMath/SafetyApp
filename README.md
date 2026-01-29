@@ -8,6 +8,7 @@
 ## 📱 Demo
 
 ![App Demo](./media/SafetyAppdemo.gif)
+![Image](https://github.com/user-attachments/assets/650cc135-9aa6-4a17-8eca-b0f1ea4045b1)
 
 **SafetyApp** is a specialized mobile solution for **Safety Management Systems (SMS)** and continued airworthiness. It bridges the gap between complex aeronautical regulations and daily operational efficiency.
 
