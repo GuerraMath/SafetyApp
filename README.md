@@ -5,6 +5,10 @@
 [![Status](https://img.shields.io/badge/Status-In%20Development-orange?style=for-the-badge)](https://github.com/GuerraMath/SafetyApp)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
+## 📱 Demo
+
+![App Demo](./app/src/main/assets/SafetyAppdemo.gif)
+
 **SafetyApp** is a specialized mobile solution for **Safety Management Systems (SMS)** and continued airworthiness. It bridges the gap between complex aeronautical regulations and daily operational efficiency.
 
 ## 📌 Overview
