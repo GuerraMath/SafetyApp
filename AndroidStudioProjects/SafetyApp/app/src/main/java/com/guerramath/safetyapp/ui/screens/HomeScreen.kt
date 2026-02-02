@@ -1,162 +1,183 @@
 package com.guerramath.safetyapp.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.guerramath.safetyapp.auth.data.preferences.AuthPreferences
-// import com.guerramath.safetyapp.auth.data.preferences.UserPreferences // REMOVER: Não precisamos mais deste
-import com.guerramath.safetyapp.auth.ui.components.AuthColors
+import com.guerramath.safetyapp.data.api.RetrofitInstance
+import com.guerramath.safetyapp.data.api.SafetyApiService
+import com.guerramath.safetyapp.data.local.SafetyDatabase
+import com.guerramath.safetyapp.data.repository.SafetyRepository
+import com.guerramath.safetyapp.presentation.custom.CreateChecklistScreen
+import com.guerramath.safetyapp.presentation.custom.CustomChecklistViewModel
+import com.guerramath.safetyapp.presentation.custom.CustomChecklistViewModelFactory
+import com.guerramath.safetyapp.presentation.custom.MyChecklistsScreen
+import com.guerramath.safetyapp.presentation.evaluation.ChecklistScreen
+import com.guerramath.safetyapp.presentation.evaluation.ChecklistViewModel
+import com.guerramath.safetyapp.presentation.evaluation.ChecklistViewModelFactory
+import com.guerramath.safetyapp.presentation.history.HistoryScreenEnhanced
+import com.guerramath.safetyapp.presentation.history.HistoryViewModel
+import com.guerramath.safetyapp.presentation.history.HistoryViewModelFactory
+import com.guerramath.safetyapp.presentation.navigation.DrawerContent
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    onNavigateToLogin: () -> Unit,
     onLogout: () -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    // Usamos apenas AuthPreferences agora
+    // Preferências de autenticação
     val authPreferences = remember { AuthPreferences(context) }
+    val isLoggedIn by authPreferences.isLoggedIn.collectAsState(initial = false)
+    val userName by authPreferences.userName.collectAsState(initial = null)
+    val userEmail by authPreferences.userEmail.collectAsState(initial = null)
 
-    // Coletar dados diretamente do Flow do AuthPreferences
-    val userName by authPreferences.userName.collectAsState(initial = "Usuário")
-    val userEmail by authPreferences.userEmail.collectAsState(initial = "")
+    // Database e dependências
+    val database = remember { SafetyDatabase.getDatabase(context) }
+    val safetyDao = remember { database.safetyDao() }
+    val customChecklistDao = remember { database.customChecklistDao() }
+    val apiService = remember { RetrofitInstance.retrofit.create(SafetyApiService::class.java) }
+    val repository = remember { SafetyRepository(apiService, safetyDao) }
 
+    // ViewModels
+    val checklistViewModel: ChecklistViewModel = viewModel(
+        factory = ChecklistViewModelFactory(repository)
+    )
+    val historyViewModel: HistoryViewModel = viewModel(
+        factory = HistoryViewModelFactory(repository)
+    )
+    val customChecklistViewModel: CustomChecklistViewModel = viewModel(
+        factory = CustomChecklistViewModelFactory(customChecklistDao)
+    )
+
+    // Navegação
     val navController = rememberNavController()
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route ?: "checklist"
 
-    NavHost(
-        navController = navController,
-        startDestination = "home_main"
-    ) {
-        composable("home_main") {
-            HomeMainContent(
-                userName = userName ?: "Usuário",
-                userEmail = userEmail ?: "",
-                onSettingsClick = {
-                    navController.navigate("settings")
-                },
-                onLogout = {
-                    scope.launch {
-                        // CORREÇÃO: Nome do método atualizado
-                        authPreferences.clearAuthData()
-                        onLogout()
-                    }
-                }
-            )
-        }
+    // Estado do Drawer
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
-        composable("settings") {
-            // Placeholder simples para SettingsScreen se ela não existir ainda neste contexto
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Button(onClick = {
-                    scope.launch {
-                        authPreferences.clearAuthData()
-                        onLogout()
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet(
+                drawerContainerColor = Color.Transparent,
+                modifier = Modifier.width(300.dp)
+            ) {
+                DrawerContent(
+                    currentRoute = currentRoute,
+                    onNavigate = { route ->
+                        navController.navigate(route) {
+                            popUpTo("checklist") { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onCloseDrawer = {
+                        scope.launch { drawerState.close() }
+                    },
+                    isLoggedIn = isLoggedIn,
+                    userName = userName,
+                    userEmail = userEmail,
+                    onLoginClick = {
+                        onNavigateToLogin()
+                    },
+                    onLogout = {
+                        scope.launch {
+                            authPreferences.clearAuthData()
+                            onLogout()
+                        }
                     }
-                }) {
-                    Text("Sair do App")
-                }
+                )
             }
         }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun HomeMainContent(
-    userName: String,
-    userEmail: String,
-    onSettingsClick: () -> Unit,
-    onLogout: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        AuthColors.Background,
-                        Color(0xFF1A1A2E)
-                    )
-                )
-            )
-            .statusBarsPadding()
-            .navigationBarsPadding()
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
+        NavHost(
+            navController = navController,
+            startDestination = "checklist"
         ) {
-            TopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(AuthColors.GradientPrimary),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = userName.firstOrNull()?.uppercase() ?: "U",
-                                color = AuthColors.TextPrimary,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = "Olá, $userName!",
-                                color = AuthColors.TextPrimary,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = userEmail,
-                                color = AuthColors.TextSecondary,
-                                fontSize = 12.sp
-                            )
-                        }
+            // Dashboard SMS (ChecklistScreen)
+            composable("checklist") {
+                ChecklistScreen(
+                    viewModel = checklistViewModel,
+                    onOpenDrawer = {
+                        scope.launch { drawerState.open() }
+                    },
+                    onNavigateToHistory = {
+                        navController.navigate("history")
                     }
-                },
-                actions = {
-                    IconButton(onClick = onSettingsClick) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Configurações",
-                            tint = AuthColors.TextPrimary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
                 )
-            )
+            }
 
-            // Resto do layout igual...
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(text = "🎉", fontSize = 64.sp)
-                Text(text = "Logado com sucesso!", color = Color.White)
+            // Meus Checklists
+            composable("my_checklists") {
+                MyChecklistsScreen(
+                    viewModel = customChecklistViewModel,
+                    onNavigateBack = {
+                        scope.launch { drawerState.open() }
+                    },
+                    onNavigateToCreate = {
+                        navController.navigate("create_checklist")
+                    },
+                    onNavigateToEdit = { checklistId ->
+                        customChecklistViewModel.loadChecklist(checklistId)
+                        navController.navigate("create_checklist")
+                    }
+                )
+            }
+
+            // Criar/Editar Checklist
+            composable("create_checklist") {
+                CreateChecklistScreen(
+                    viewModel = customChecklistViewModel,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onNavigateToList = {
+                        navController.navigate("my_checklists") {
+                            popUpTo("my_checklists") { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            // Histórico
+            composable("history") {
+                HistoryScreenEnhanced(
+                    viewModel = historyViewModel,
+                    onNavigateBack = {
+                        scope.launch { drawerState.open() }
+                    }
+                )
+            }
+
+            // Configurações
+            composable("settings") {
+                SettingsScreen(
+                    onNavigateBack = {
+                        scope.launch { drawerState.open() }
+                    },
+                    onLogout = {
+                        scope.launch {
+                            authPreferences.clearAuthData()
+                            onLogout()
+                        }
+                    }
+                )
             }
         }
     }

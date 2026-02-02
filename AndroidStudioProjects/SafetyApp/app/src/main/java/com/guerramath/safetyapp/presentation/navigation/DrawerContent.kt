@@ -3,11 +3,13 @@ package com.guerramath.safetyapp.presentation.navigation
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Login
+import androidx.compose.material.icons.automirrored.filled.ListAlt
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -30,7 +32,12 @@ private val BorderInactive = Color.White.copy(alpha = 0.2f)
 fun DrawerContent(
     currentRoute: String,
     onNavigate: (String) -> Unit,
-    onCloseDrawer: () -> Unit
+    onCloseDrawer: () -> Unit,
+    isLoggedIn: Boolean = false,
+    userName: String? = null,
+    userEmail: String? = null,
+    onLoginClick: (() -> Unit)? = null,
+    onLogout: (() -> Unit)? = null
 ) {
     // Fundo Geral
     Box(
@@ -49,7 +56,15 @@ fun DrawerContent(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // --- HEADER ---
-            GlassProfileHeader()
+            GlassProfileHeader(
+                isLoggedIn = isLoggedIn,
+                userName = userName,
+                userEmail = userEmail,
+                onLoginClick = {
+                    onLoginClick?.invoke()
+                    onCloseDrawer()
+                }
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -68,7 +83,7 @@ fun DrawerContent(
             )
 
             GlassMenuItem(
-                icon = Icons.Default.ListAlt,
+                icon = Icons.AutoMirrored.Filled.ListAlt,
                 label = "Meus Checklists",
                 isSelected = currentRoute == "my_checklists" || currentRoute == "create_checklist",
                 accentColor = NeonGreen,
@@ -108,18 +123,27 @@ fun DrawerContent(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // --- FOOTER ---
-            GlassFooter(onCloseDrawer)
+            // --- FOOTER (só mostra logout se estiver logado) ---
+            if (isLoggedIn && onLogout != null) {
+                GlassFooter(onLogout = onLogout)
+            }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GlassProfileHeader() {
+fun GlassProfileHeader(
+    isLoggedIn: Boolean,
+    userName: String?,
+    userEmail: String?,
+    onLoginClick: () -> Unit
+) {
     Surface(
+        onClick = if (!isLoggedIn) onLoginClick else { {} },
         color = Color.White.copy(alpha = 0.05f),
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, BorderInactive),
+        border = BorderStroke(1.dp, if (!isLoggedIn) NeonCyan else BorderInactive),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -130,17 +154,71 @@ fun GlassProfileHeader() {
                 modifier = Modifier
                     .size(56.dp)
                     .clip(CircleShape)
-                    .background(Brush.linearGradient(listOf(NeonCyan, Color.Blue))),
+                    .background(
+                        if (isLoggedIn) {
+                            Brush.linearGradient(listOf(NeonGreen, Color(0xFF059669)))
+                        } else {
+                            Brush.linearGradient(listOf(NeonCyan, Color.Blue))
+                        }
+                    ),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Person, null, tint = Color.White)
+                if (isLoggedIn && !userName.isNullOrBlank()) {
+                    Text(
+                        text = userName.first().uppercase(),
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 24.sp
+                    )
+                } else {
+                    Icon(
+                        imageVector = if (isLoggedIn) Icons.Default.Person else Icons.AutoMirrored.Filled.Login,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            Column {
-                Text("Matheus Guerra", color = Color.White, fontWeight = FontWeight.Bold)
-                Text("M.Sc. ITA | Piloto", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
+            Column(modifier = Modifier.weight(1f)) {
+                if (isLoggedIn) {
+                    Text(
+                        text = userName ?: "Usuário",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                    if (!userEmail.isNullOrBlank()) {
+                        Text(
+                            text = userEmail,
+                            color = Color.White.copy(alpha = 0.7f),
+                            fontSize = 12.sp
+                        )
+                    }
+                } else {
+                    Text(
+                        text = "Fazer login",
+                        color = NeonCyan,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                    Text(
+                        text = "Toque para entrar na sua conta",
+                        color = Color.White.copy(alpha = 0.5f),
+                        fontSize = 12.sp
+                    )
+                }
+            }
+
+            if (!isLoggedIn) {
+                Icon(
+                    imageVector = Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = NeonCyan,
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
     }
@@ -155,11 +233,9 @@ fun GlassMenuItem(
     accentColor: Color,
     onClick: () -> Unit
 ) {
-    // CORREÇÃO: Usar Surface garante que o clique funcione corretamente
     val backgroundColor = if (isSelected) accentColor.copy(alpha = 0.15f) else Color.Transparent
     val contentColor = if (isSelected) accentColor else Color.White.copy(alpha = 0.8f)
 
-    // Borda como Brush não funciona direto no BorderStroke do Surface, então usamos Modifier.border
     val borderBrush = if (isSelected) {
         Brush.horizontalGradient(listOf(accentColor, accentColor.copy(alpha = 0.5f)))
     } else {
@@ -167,7 +243,7 @@ fun GlassMenuItem(
     }
 
     Surface(
-        onClick = onClick, // O clique nativo do Surface é infalível
+        onClick = onClick,
         shape = RoundedCornerShape(12.dp),
         color = backgroundColor,
         modifier = Modifier
@@ -179,11 +255,10 @@ fun GlassMenuItem(
                 shape = RoundedCornerShape(12.dp)
             )
     ) {
-        // O conteúdo interno (Ícone + Texto)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .fillMaxSize() // Garante que o Row ocupe todo o Surface
+                .fillMaxSize()
                 .padding(horizontal = 16.dp)
         ) {
             Icon(
@@ -228,9 +303,9 @@ fun SectionTitle(text: String) {
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GlassFooter(onLogout: () -> Unit) {
-    // Footer também corrigido com Surface
     Surface(
         onClick = onLogout,
         shape = RoundedCornerShape(12.dp),
@@ -243,9 +318,19 @@ fun GlassFooter(onLogout: () -> Unit) {
             horizontalArrangement = Arrangement.Center,
             modifier = Modifier.padding(16.dp)
         ) {
-            Icon(Icons.Default.Logout, null, tint = Color(0xFFEF4444), modifier = Modifier.size(20.dp))
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.Logout,
+                contentDescription = null,
+                tint = Color(0xFFEF4444),
+                modifier = Modifier.size(20.dp)
+            )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("LOGOUT DO SISTEMA", color = Color(0xFFEF4444), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+            Text(
+                text = "SAIR DA CONTA",
+                color = Color(0xFFEF4444),
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp
+            )
         }
     }
 }
