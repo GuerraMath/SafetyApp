@@ -12,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.NoAccounts // Ícone para offline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,7 +36,8 @@ fun LoginScreen(
     viewModel: AuthViewModel,
     onNavigateToRegister: () -> Unit,
     onNavigateToForgotPassword: () -> Unit,
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: () -> Unit,
+    onSkipLogin: () -> Unit // NOVO PARÂMETRO
 ) {
     val authState by viewModel.authState.collectAsState()
     val emailError by viewModel.emailError.collectAsState()
@@ -53,9 +55,7 @@ fun LoginScreen(
         isVisible = true
     }
 
-    // Monitora o estado de login
     LaunchedEffect(authState) {
-        // CORREÇÃO: Mudamos de LoggedIn para Success para bater com o ViewModel
         if (authState is AuthState.Success) {
             onLoginSuccess()
         }
@@ -113,7 +113,7 @@ fun LoginScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Faça login para acessar sua conta",
+                            text = "Faça login para sincronizar seu histórico",
                             color = AuthColors.TextSecondary,
                             fontSize = 16.sp,
                             textAlign = TextAlign.Center
@@ -226,34 +226,25 @@ fun LoginScreen(
                         AuthDivider(text = "Ou")
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Botões Sociais
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        // --- BOTÃO DE PULAR / MODO OFFLINE ---
+                        OutlinedButton(
+                            onClick = onSkipLogin,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = AuthColors.TextPrimary,
+                                containerColor = Color.Transparent
+                            ),
+                            border = BorderStroke(1.dp, AuthColors.Primary),
+                            shape = RoundedCornerShape(12.dp)
                         ) {
-                            OutlinedButton(
-                                onClick = { },
-                                modifier = Modifier.weight(1f).height(50.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = AuthColors.TextPrimary
-                                ),
-                                border = BorderStroke(1.dp, AuthColors.Border),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Text("Google")
-                            }
-
-                            OutlinedButton(
-                                onClick = { },
-                                modifier = Modifier.weight(1f).height(50.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = AuthColors.TextPrimary
-                                ),
-                                border = BorderStroke(1.dp, AuthColors.Border),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Text("GitHub")
-                            }
+                            Icon(
+                                imageVector = Icons.Outlined.NoAccounts,
+                                contentDescription = null,
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                            Text("Continuar sem login (Offline)")
                         }
 
                         Spacer(modifier = Modifier.height(32.dp))

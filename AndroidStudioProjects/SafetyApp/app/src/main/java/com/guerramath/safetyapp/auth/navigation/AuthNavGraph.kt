@@ -15,28 +15,24 @@ import com.guerramath.safetyapp.auth.ui.screens.LoginScreen
 import com.guerramath.safetyapp.auth.ui.screens.RegisterScreen
 import com.guerramath.safetyapp.auth.viewmodel.AuthViewModel
 import com.guerramath.safetyapp.auth.viewmodel.AuthViewModelFactory
-import com.guerramath.safetyapp.data.api.RetrofitInstance // Verifique se o nome é RetrofitInstance ou RetrofitClient
+import com.guerramath.safetyapp.data.api.RetrofitInstance
 
 @Composable
 fun AuthNavGraph(
     navController: NavHostController,
-    onLoginSuccess: () -> Unit // Callback para ir para a Home
+    onLoginSuccess: () -> Unit,
+    onSkipLogin: () -> Unit // NOVO PARÂMETRO
 ) {
     val context = LocalContext.current
 
-    // 1. Criar Dependências
+    // Dependências
     val authPreferences = remember { AuthPreferences(context) }
-
-    // Cria o serviço da API usando o RetrofitInstance que você já tem
     val apiService = remember {
-        // Se RetrofitInstance.api não existir, use .retrofit.create(...)
         RetrofitInstance.retrofit.create(AuthApiService::class.java)
     }
-
-    // Cria o Repositório
     val repository = remember { AuthRepository(apiService, authPreferences) }
 
-    // 2. Criar ViewModel usando a Factory CORRETA (passando o repository)
+    // ViewModel
     val authViewModel: AuthViewModel = viewModel(
         factory = AuthViewModelFactory(repository)
     )
@@ -48,7 +44,8 @@ fun AuthNavGraph(
                 viewModel = authViewModel,
                 onNavigateToRegister = { navController.navigate("register") },
                 onNavigateToForgotPassword = { navController.navigate("forgot_password") },
-                onLoginSuccess = onLoginSuccess
+                onLoginSuccess = onLoginSuccess,
+                onSkipLogin = onSkipLogin // Repassa a ação
             )
         }
 
@@ -57,7 +54,6 @@ fun AuthNavGraph(
                 viewModel = authViewModel,
                 onNavigateBack = { navController.popBackStack() },
                 onRegisterSuccess = {
-                    // Volta para o login após registro ou loga direto
                     navController.popBackStack()
                 }
             )
