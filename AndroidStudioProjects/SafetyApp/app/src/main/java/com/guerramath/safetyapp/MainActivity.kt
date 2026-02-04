@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -12,6 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import com.guerramath.safetyapp.auth.data.preferences.AuthPreferences
 import com.guerramath.safetyapp.auth.navigation.AuthNavGraph
 import com.guerramath.safetyapp.auth.session.SessionManager
@@ -26,6 +31,21 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var authPreferences: AuthPreferences
     private lateinit var preferencesManager: PreferencesManager
+    private lateinit var googleSignInClient: GoogleSignInClient
+    private var onGoogleSignInResult: ((String?) -> Unit)? = null
+
+    private val googleSignInLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        try {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            val account = task.getResult(ApiException::class.java)
+            val idToken = account?.idToken
+            onGoogleSignInResult?.invoke(idToken)
+        } catch (e: ApiException) {
+            onGoogleSignInResult?.invoke(null)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,6 +54,15 @@ class MainActivity : ComponentActivity() {
         authPreferences = AuthPreferences(this)
         preferencesManager = PreferencesManager(this)
         SessionManager.init(this)
+
+        // Initialize Google Sign-In
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.google_client_id))
+            .requestEmail()
+            .requestProfile()
+            .build()
+
+        googleSignInClient = GoogleSignIn.getClient(this, gso)
 
         // Determinar destino inicial
         val startDestination = runBlocking {
@@ -103,6 +132,11 @@ class MainActivity : ComponentActivity() {
                     onSkipLogin = {
                         // Se usuário quiser voltar sem logar
                         navController.popBackStack()
+                    },
+                    onGoogleSignInClick = { onGoogleSignInResult ->
+                        // Salva o callback e inicia o sign-in
+                        this@MainActivity.onGoogleSignInResult = onGoogleSignInResult
+                        googleSignInLauncher.launch(googleSignInClient.signInIntent)
                     }
                 )
             }

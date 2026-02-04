@@ -37,7 +37,8 @@ fun LoginScreen(
     onNavigateToRegister: () -> Unit,
     onNavigateToForgotPassword: () -> Unit,
     onLoginSuccess: () -> Unit,
-    onSkipLogin: () -> Unit // NOVO PARÂMETRO
+    onSkipLogin: () -> Unit, // NOVO PARÂMETRO
+    onGoogleSignInClick: () -> Unit = {} // NOVO PARÂMETRO para OAuth
 ) {
     val authState by viewModel.authState.collectAsState()
     val emailError by viewModel.emailError.collectAsState()
@@ -223,8 +224,32 @@ fun LoginScreen(
                         )
 
                         Spacer(modifier = Modifier.height(24.dp))
-                        AuthDivider(text = "Ou")
+                        AuthDivider(text = "Ou continue com")
                         Spacer(modifier = Modifier.height(24.dp))
+
+                        // --- BOTÃO GOOGLE OAUTH ---
+                        Button(
+                            onClick = onGoogleSignInClick,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.White,
+                                contentColor = AuthColors.Background
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            enabled = authState !is AuthState.Loading
+                        ) {
+                            Text(
+                                text = "Continuar com Google",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 15.sp
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                        AuthDivider(text = "Ou")
+                        Spacer(modifier = Modifier.height(16.dp))
 
                         // --- BOTÃO DE PULAR / MODO OFFLINE ---
                         OutlinedButton(

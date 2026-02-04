@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">SafetyApp</string>
+
+    <!-- Google OAuth Configuration -->
+    <string name="google_client_id">727557341501-t7jdlqukns4etesst2400shndiqdsji8.apps.googleusercontent.com</string>
+    <string name="google_web_client_id">727557341501-t7jdlqukns4etesst2400shndiqdsji8.apps.googleusercontent.com</string>
 </resources>

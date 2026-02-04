@@ -65,6 +65,24 @@ class AuthViewModel(
         }
     }
 
+    fun oauthLogin(idToken: String) {
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+
+            when (val result = repository.oauthLogin(idToken)) {
+                is NetworkResult.Success -> {
+                    _authState.value = AuthState.Success(result.data)
+                }
+                is NetworkResult.Error -> {
+                    _authState.value = AuthState.Error(result.message ?: "Erro ao fazer login com Google")
+                }
+                is NetworkResult.Loading -> {
+                    _authState.value = AuthState.Loading
+                }
+            }
+        }
+    }
+
     // Assinatura atualizada para receber os 4 parâmetros da RegisterScreen
     fun register(email: String, password: String, name: String, confirmPassword: String) {
         // Valida tudo antes de enviar
