@@ -2,6 +2,7 @@ package com.guerramath.safetyapp.auth.data.api
 
 import com.guerramath.safetyapp.auth.data.dto.AuthResponse
 import com.guerramath.safetyapp.auth.data.dto.ForgotPasswordRequest
+import com.guerramath.safetyapp.auth.data.dto.GoogleSignInRequest
 import com.guerramath.safetyapp.auth.data.dto.LoginRequest
 import com.guerramath.safetyapp.auth.data.dto.MessageResponse
 import com.guerramath.safetyapp.auth.data.dto.RefreshTokenRequest
@@ -33,4 +34,11 @@ interface AuthApiService {
     // FIX: Adding the missing logout function
     @POST("auth/logout")
     suspend fun logout(): Response<Unit>
+
+    /**
+     * Autenticação via Google.
+     * Envia o ID Token do Google para o backend validar e criar/autenticar o usuário.
+     */
+    @POST("auth/google")
+    suspend fun googleSignIn(@Body request: GoogleSignInRequest): Response<AuthResponse>
 }

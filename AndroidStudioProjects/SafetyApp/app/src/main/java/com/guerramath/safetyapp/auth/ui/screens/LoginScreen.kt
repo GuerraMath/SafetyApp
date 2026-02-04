@@ -1,5 +1,6 @@
 package com.guerramath.safetyapp.auth.ui.screens
 
+import android.app.Activity
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
@@ -19,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -26,9 +28,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.guerramath.safetyapp.auth.data.google.GoogleAuthManager
+import com.guerramath.safetyapp.auth.data.google.GoogleSignInResult
 import com.guerramath.safetyapp.auth.ui.components.*
 import com.guerramath.safetyapp.auth.viewmodel.AuthState
 import com.guerramath.safetyapp.auth.viewmodel.AuthViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,10 +54,39 @@ fun LoginScreen(
 
     val focusManager = LocalFocusManager.current
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
+    val activity = context as? Activity
+    val coroutineScope = rememberCoroutineScope()
+
+    // Google Auth Manager
+    val googleAuthManager = remember { GoogleAuthManager(context) }
 
     var isVisible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         isVisible = true
+    }
+
+    // Função para iniciar login com Google
+    fun startGoogleSignIn() {
+        val currentActivity = activity ?: return
+        coroutineScope.launch {
+            when (val result = googleAuthManager.signIn(currentActivity)) {
+                is GoogleSignInResult.Success -> {
+                    viewModel.googleSignIn(
+                        idToken = result.idToken,
+                        email = result.email,
+                        name = result.displayName,
+                        avatarUrl = result.profilePictureUrl
+                    )
+                }
+                is GoogleSignInResult.Cancelled -> {
+                    viewModel.onGoogleSignInCancelled()
+                }
+                is GoogleSignInResult.Error -> {
+                    viewModel.onGoogleSignInError(result.message)
+                }
+            }
+        }
     }
 
     LaunchedEffect(authState) {
@@ -223,8 +257,17 @@ fun LoginScreen(
                         )
 
                         Spacer(modifier = Modifier.height(24.dp))
-                        AuthDivider(text = "Ou")
+                        AuthDivider(text = "Ou continue com")
                         Spacer(modifier = Modifier.height(24.dp))
+
+                        // --- BOTÃO DO GOOGLE ---
+                        GoogleSignInButton(
+                            onClick = { startGoogleSignIn() },
+                            isLoading = authState is AuthState.GoogleLoading,
+                            enabled = authState !is AuthState.Loading && authState !is AuthState.GoogleLoading
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
 
                         // --- BOTÃO DE PULAR / MODO OFFLINE ---
                         OutlinedButton(

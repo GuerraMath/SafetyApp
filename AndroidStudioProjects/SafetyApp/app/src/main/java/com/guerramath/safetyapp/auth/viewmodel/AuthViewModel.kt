@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 sealed class AuthState {
     object Idle : AuthState()
     object Loading : AuthState()
+    object GoogleLoading : AuthState() // Estado específico para loading do Google
     data class Success(val user: User) : AuthState() // Mudado de LoggedIn para Success para bater com a Screen
     data class Error(val message: String) : AuthState()
     data class ForgotPasswordSent(val message: String) : AuthState()
@@ -125,6 +126,47 @@ class AuthViewModel(
             repository.logout()
             _authState.value = AuthState.Idle
         }
+    }
+
+    /**
+     * Realiza login via Google.
+     * Chamado após obter o ID Token do GoogleAuthManager.
+     */
+    fun googleSignIn(
+        idToken: String,
+        email: String,
+        name: String?,
+        avatarUrl: String?
+    ) {
+        viewModelScope.launch {
+            _authState.value = AuthState.GoogleLoading
+
+            when (val result = repository.googleSignIn(idToken, email, name, avatarUrl)) {
+                is NetworkResult.Success -> {
+                    _authState.value = AuthState.Success(result.data)
+                }
+                is NetworkResult.Error -> {
+                    _authState.value = AuthState.Error(result.message ?: "Erro ao fazer login com Google")
+                }
+                is NetworkResult.Loading -> {
+                    _authState.value = AuthState.GoogleLoading
+                }
+            }
+        }
+    }
+
+    /**
+     * Chamado quando o usuário cancela o login com Google.
+     */
+    fun onGoogleSignInCancelled() {
+        _authState.value = AuthState.Idle
+    }
+
+    /**
+     * Chamado quando ocorre um erro no Google Sign-In (antes de chamar a API).
+     */
+    fun onGoogleSignInError(message: String) {
+        _authState.value = AuthState.Error(message)
     }
 
     // --- VALIDAÇÕES ---
