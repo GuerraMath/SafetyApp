@@ -2,6 +2,7 @@ package com.guerramath.safetyapp.auth.data.repository
 
 import com.guerramath.safetyapp.auth.data.dto.ForgotPasswordRequest
 import com.guerramath.safetyapp.auth.data.dto.LoginRequest
+import com.guerramath.safetyapp.auth.data.dto.OAuthLoginRequest
 import com.guerramath.safetyapp.auth.data.dto.RegisterRequest
 import com.guerramath.safetyapp.auth.data.api.AuthApiService
 import com.guerramath.safetyapp.auth.data.model.User
@@ -40,6 +41,35 @@ class AuthRepository(
             }
             is NetworkResult.Error -> {
                 // Repassa o erro mantendo a mensagem e código
+                NetworkResult.Error(result.message, result.code, result.exception)
+            }
+            is NetworkResult.Loading -> NetworkResult.Loading
+        }
+    }
+
+    /**
+     * Realiza login via OAuth (Google).
+     */
+    suspend fun oauthLogin(idToken: String): NetworkResult<User> {
+        val result = safeApiCall {
+            apiService.oauthLogin(OAuthLoginRequest(idToken))
+        }
+
+        return when (result) {
+            is NetworkResult.Success -> {
+                val response = result.data
+
+                authPreferences.saveAuthData(
+                    token = response.token,
+                    refreshToken = response.refreshToken,
+                    userId = response.user.id.toString(),
+                    name = response.user.name,
+                    email = response.user.email
+                )
+
+                NetworkResult.Success(response.user)
+            }
+            is NetworkResult.Error -> {
                 NetworkResult.Error(result.message, result.code, result.exception)
             }
             is NetworkResult.Loading -> NetworkResult.Loading

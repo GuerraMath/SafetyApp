@@ -4,6 +4,7 @@ import com.guerramath.safetyapp.auth.data.dto.AuthResponse
 import com.guerramath.safetyapp.auth.data.dto.ForgotPasswordRequest
 import com.guerramath.safetyapp.auth.data.dto.LoginRequest
 import com.guerramath.safetyapp.auth.data.dto.MessageResponse
+import com.guerramath.safetyapp.auth.data.dto.OAuthLoginRequest
 import com.guerramath.safetyapp.auth.data.dto.RefreshTokenRequest
 import com.guerramath.safetyapp.auth.data.dto.RegisterRequest
 import com.guerramath.safetyapp.auth.data.model.User // Correct Import
@@ -17,6 +18,9 @@ interface AuthApiService {
 
     @POST("auth/login")
     suspend fun login(@Body request: LoginRequest): Response<AuthResponse>
+
+    @POST("auth/oauth/login")
+    suspend fun oauthLogin(@Body request: OAuthLoginRequest): Response<AuthResponse>
 
     @POST("auth/register")
     suspend fun register(@Body request: RegisterRequest): Response<AuthResponse>
