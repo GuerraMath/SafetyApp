@@ -21,7 +21,8 @@ import com.guerramath.safetyapp.data.api.RetrofitInstance
 fun AuthNavGraph(
     navController: NavHostController,
     onLoginSuccess: () -> Unit,
-    onSkipLogin: () -> Unit // NOVO PARÂMETRO
+    onSkipLogin: () -> Unit,
+    onGoogleSignInClick: ((idTokenCallback: (String?, String?) -> Unit) -> Unit)? = null
 ) {
     val context = LocalContext.current
 
@@ -45,7 +46,16 @@ fun AuthNavGraph(
                 onNavigateToRegister = { navController.navigate("register") },
                 onNavigateToForgotPassword = { navController.navigate("forgot_password") },
                 onLoginSuccess = onLoginSuccess,
-                onSkipLogin = onSkipLogin // Repassa a ação
+                onSkipLogin = onSkipLogin,
+                onGoogleSignInClick = {
+                    onGoogleSignInClick?.invoke { idToken, errorMessage ->
+                        if (idToken != null) {
+                            authViewModel.oauthLogin(idToken)
+                        } else if (errorMessage != null) {
+                            authViewModel.setOAuthError(errorMessage)
+                        }
+                    }
+                }
             )
         }
 

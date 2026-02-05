@@ -4,6 +4,10 @@
 
     <!-- Permissões para Google Sign-In -->
     <uses-permission android:name="android.permission.INTERNET" />
+<<<<<<< HEAD
+=======
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+>>>>>>> temp-fix
 
     <application
         android:name=".SafetyApplication"
@@ -16,7 +20,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SafetyApp">
         <activity
-            android:name="com.guerramath.safetyapp.MainActivity"  android:exported="true"
+            android:name="com.guerramath.safetyapp.MainActivity"
+            android:exported="true"
             android:label="SafetyApp"
             android:theme="@style/Theme.SafetyApp">
             <intent-filter>

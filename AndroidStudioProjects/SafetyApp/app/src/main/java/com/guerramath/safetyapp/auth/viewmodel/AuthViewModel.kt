@@ -1,5 +1,6 @@
 package com.guerramath.safetyapp.auth.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.guerramath.safetyapp.auth.data.model.User
@@ -64,6 +65,36 @@ class AuthViewModel(
                 }
             }
         }
+    }
+
+    fun oauthLogin(idToken: String) {
+        Log.d("AuthViewModel", "Iniciando OAuth login com token de ${idToken.length} caracteres")
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+
+            when (val result = repository.oauthLogin(idToken)) {
+                is NetworkResult.Success -> {
+                    Log.i("AuthViewModel", "OAuth login bem-sucedido para ${result.data.email}")
+                    _authState.value = AuthState.Success(result.data)
+                }
+                is NetworkResult.Error -> {
+                    val errorMsg = result.message ?: "Erro ao fazer login com Google"
+                    Log.e("AuthViewModel", "Erro OAuth login: $errorMsg (código: ${result.code})")
+                    _authState.value = AuthState.Error(errorMsg)
+                }
+                is NetworkResult.Loading -> {
+                    _authState.value = AuthState.Loading
+                }
+            }
+        }
+    }
+
+    /**
+     * Define erro de OAuth diretamente (p.ex, cancelamento do usuário ou erro do Google)
+     */
+    fun setOAuthError(errorMessage: String) {
+        Log.e("AuthViewModel", "Erro OAuth: $errorMessage")
+        _authState.value = AuthState.Error(errorMessage)
     }
 
     // Assinatura atualizada para receber os 4 parâmetros da RegisterScreen

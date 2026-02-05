@@ -42,7 +42,8 @@ fun LoginScreen(
     onNavigateToRegister: () -> Unit,
     onNavigateToForgotPassword: () -> Unit,
     onLoginSuccess: () -> Unit,
-    onSkipLogin: () -> Unit // NOVO PARÂMETRO
+    onSkipLogin: () -> Unit, // NOVO PARÂMETRO
+    onGoogleSignInClick: () -> Unit = {} // NOVO PARÂMETRO para OAuth
 ) {
     val authState by viewModel.authState.collectAsState()
     val emailError by viewModel.emailError.collectAsState()
@@ -259,6 +260,13 @@ fun LoginScreen(
                         Spacer(modifier = Modifier.height(24.dp))
                         AuthDivider(text = "Ou continue com")
                         Spacer(modifier = Modifier.height(24.dp))
+
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                        AuthDivider(text = "Ou")
+                        Spacer(modifier = Modifier.height(16.dp))
+
+
 
                         // --- BOTÃO DO GOOGLE ---
                         GoogleSignInButton(
