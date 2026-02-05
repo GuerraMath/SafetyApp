@@ -30,17 +30,19 @@ class GoogleSignInHelper(context: Context, clientId: String) {
                 val account = task.getResult(ApiException::class.java)
                 val idToken = account?.idToken
                 if (idToken != null) {
-                    continuation.resume(idToken)
+                    continuation.resume(idToken) {
+                        // Optional: handle cancellation
+                    }
                 } else {
                     continuation.resumeWithException(Exception("ID Token is null"))
                 }
-            } catch (e: ApiException) {
+            } catch (e: com.google.android.gms.common.api.ApiException) {
                 continuation.resumeWithException(e)
             }
+            // Add onCancellation block to handle coroutine cancellation
+            continuation.invokeOnCancellation {
+                // Perform cleanup or logging if needed when the coroutine is cancelled
+            }
         }
-    }
-
-    fun signOut() {
-        googleSignInClient.signOut()
     }
 }

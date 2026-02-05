@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Permissões para Google Sign-In -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
@@ -16,7 +17,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SafetyApp">
         <activity
-            android:name="com.guerramath.safetyapp.MainActivity"  android:exported="true"
+            android:name="com.guerramath.safetyapp.MainActivity"
+            android:exported="true"
             android:label="SafetyApp"
             android:theme="@style/Theme.SafetyApp">
             <intent-filter>

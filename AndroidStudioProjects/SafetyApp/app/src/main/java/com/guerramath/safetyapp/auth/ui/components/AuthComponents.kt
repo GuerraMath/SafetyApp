@@ -267,3 +267,131 @@ fun AuthDivider(
         )
     }
 }
+
+/**
+ * Botão de login com Google
+ */
+@Composable
+fun GoogleSignInButton(
+    onClick: () -> Unit,
+    isLoading: Boolean = false,
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier
+) {
+    OutlinedButton(
+        onClick = onClick,
+        enabled = enabled && !isLoading,
+        modifier = modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = Color.White,
+            contentColor = Color.Black,
+            disabledContainerColor = Color.White.copy(alpha = 0.7f),
+            disabledContentColor = Color.Black.copy(alpha = 0.5f)
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            color = if (enabled) Color(0xFFDADCE0) else Color(0xFFDADCE0).copy(alpha = 0.5f)
+        ),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                color = Color.Black,
+                strokeWidth = 2.dp
+            )
+        } else {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                // Logo do Google usando texto colorido (sem dependência de drawable)
+                GoogleLogo(modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "Continuar com Google",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF1F1F1F)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Logo do Google usando Canvas (sem dependência de drawable externo)
+ */
+@Composable
+fun GoogleLogo(modifier: Modifier = Modifier) {
+    androidx.compose.foundation.Canvas(modifier = modifier) {
+        val width = size.width
+        val height = size.height
+        val centerX = width / 2
+        val centerY = height / 2
+        val radius = minOf(width, height) / 2 * 0.9f
+
+        // Cores do Google
+        val red = Color(0xFFEA4335)
+        val yellow = Color(0xFFFBBC05)
+        val green = Color(0xFF34A853)
+        val blue = Color(0xFF4285F4)
+
+        // Desenha o "G" estilizado do Google
+        // Arco azul (direita)
+        drawArc(
+            color = blue,
+            startAngle = -45f,
+            sweepAngle = 90f,
+            useCenter = true,
+            topLeft = androidx.compose.ui.geometry.Offset(centerX - radius, centerY - radius),
+            size = androidx.compose.ui.geometry.Size(radius * 2, radius * 2)
+        )
+
+        // Arco verde (baixo)
+        drawArc(
+            color = green,
+            startAngle = 45f,
+            sweepAngle = 90f,
+            useCenter = true,
+            topLeft = androidx.compose.ui.geometry.Offset(centerX - radius, centerY - radius),
+            size = androidx.compose.ui.geometry.Size(radius * 2, radius * 2)
+        )
+
+        // Arco amarelo (esquerda)
+        drawArc(
+            color = yellow,
+            startAngle = 135f,
+            sweepAngle = 90f,
+            useCenter = true,
+            topLeft = androidx.compose.ui.geometry.Offset(centerX - radius, centerY - radius),
+            size = androidx.compose.ui.geometry.Size(radius * 2, radius * 2)
+        )
+
+        // Arco vermelho (topo)
+        drawArc(
+            color = red,
+            startAngle = 225f,
+            sweepAngle = 90f,
+            useCenter = true,
+            topLeft = androidx.compose.ui.geometry.Offset(centerX - radius, centerY - radius),
+            size = androidx.compose.ui.geometry.Size(radius * 2, radius * 2)
+        )
+
+        // Círculo branco no centro para criar o "G"
+        drawCircle(
+            color = Color.White,
+            radius = radius * 0.6f,
+            center = androidx.compose.ui.geometry.Offset(centerX, centerY)
+        )
+
+        // Barra horizontal azul do "G"
+        drawRect(
+            color = blue,
+            topLeft = androidx.compose.ui.geometry.Offset(centerX - radius * 0.1f, centerY - radius * 0.15f),
+            size = androidx.compose.ui.geometry.Size(radius * 0.9f, radius * 0.3f)
+        )
+    }
+}

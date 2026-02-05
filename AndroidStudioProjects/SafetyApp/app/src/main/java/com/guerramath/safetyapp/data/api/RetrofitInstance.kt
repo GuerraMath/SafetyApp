@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit
 object RetrofitInstance {
 
     // Ajuste a URL se necessário (10.0.2.2 é para o emulador Android acessar o localhost do PC)
-    private const val BASE_URL = "http://10.0.2.2:8080/api/v1/"
+    private const val BASE_URL = "https://safety-api-production.up.railway.app/"
 
     // Configuração do Log (Simplificado para evitar erro de BuildConfig)
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
