@@ -42,7 +42,9 @@ class GoogleAuthManager(private val context: Context) {
     companion object {
         // Web Client ID do Google Cloud Console
 
+
         const val WEB_CLIENT_ID = "727557341501-46tnut2rjt967ioctg618m7c42hctsnh.apps.googleusercontent.com"
+
 
     }
 
